@@ -101,12 +101,13 @@ To cherry-pick optional software, use the following phony targets:
 In order to locally test a Make target, run the following:
 
 ```
-docker run --rm -it -v $PWD:/setup -w /setup ubuntu:20.04 bash
-apt update -y
-apt install -y build-essential sudo
-make <TARGET>
+./docker-make ubuntu:20.04 <TARGET>
 ```
 
 Where `<TARGET>` is the target to be tested. E.g.: `steam` for Steam.
 
-To test all installations, choose `all` as target.
+To test all installations, run:
+
+```
+./docker-make ubuntu:20.04 all
+```

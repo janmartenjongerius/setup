@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+docker run \
+  --rm \
+  -it \
+  -v $PWD:/setup \
+  -w /setup \
+  ${1?Image is not set} \
+  bash -c "apt update -y && apt install sudo build-essential -y && make ${@:2}"
