@@ -103,6 +103,8 @@ To cherry-pick optional software, use the following phony targets:
 
 # Development
 
+![docker-make vim](https://github.com/johmanx10/setup/workflows/docker-make%20vim/badge.svg)
+
 In order to locally test a Make target, run the following:
 
 ```
