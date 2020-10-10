@@ -61,22 +61,26 @@ make install
 The following files have been symbolically linked from the current repository to
 the home directory:
 
-- `.gitconfig`
-- `.gitignore`
-- `.zshrc`
+| File         | Target alias     |
+|:-------------|:-----------------|
+| `.gitconfig` | `make gitconfig` |
+| `.gitignore` | `make gitignore` |
+| `.zshrc`     | `make zshrc`     |
 
 The following software has been installed:
 
-- Bash
-- cURL
-- Docker
-- GIT
-- Google Chrome
-- JetBrains Toolbox
-- jq
-- OhMyZsh
-- Vim
-- ZSH
+| Name              | Target alias             |
+|:------------------|:-------------------------|
+| Bash              | `make bash`              |
+| cURL              | `make curl`              |
+| Docker            | `make docker`            |
+| GIT               | `make git`               |
+| Google Chrome     | `make google-chrome`     |
+| JetBrains Toolbox | `make jetbrains-toolbox` |
+| jq                | `make jq`                |
+| Oh My ZSH         | `make oh-my-zsh`         |
+| Vim               | `make vim`               |
+| ZSH               | `make zsh`               |
 
 # Optional
 

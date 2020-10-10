@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+set -e
+
+make docker
+
 docker run \
   --rm \
   -it \
