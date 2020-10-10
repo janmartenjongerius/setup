@@ -24,6 +24,8 @@ STEAM_TERMINAL := $(shell command -v gnome-terminal \
 
 SLACK := $(shell command -v slack || echo /usr/bin/slack)
 
+LSB_RELEASE := $(shell command -v lsb_release || echo /usr/bin/lsb_release)
+
 DOCKER := $(shell command -v docker || echo /usr/bin/docker)
 DOCKER_CONFIG := $(shell echo "$$HOME/.docker/config.json")
 
@@ -88,19 +90,23 @@ $(JETBRAINS_TOOLBOX_SETTINGS): | $(JETBRAINS_TOOLBOX)
 
 jetbrains-toolbox: $(JETBRAINS_TOOLBOX_SETTINGS)
 
-$(DOCKER):
+$(LSB_RELEASE):
+	sudo apt install lsb-release -y
+
+lsb_release: $(LSB_RELEASE)
+
+$(DOCKER): $(LSB_RELEASE)
 	sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
 	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(shell lsb_release -cs) stable"
+	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(shell $(LSB_RELEASE) -cs) stable"
 	sudo apt update -y
 	sudo apt install docker-ce docker-ce-cli containerd.io -y
-	sudo usermod -aG docker $$USER
-	newgrp docker
+	sudo usermod -aG docker $(shell whoami)
 	sudo systemctl enable docker
 
 $(DOCKER_CONFIG): | $(DOCKER)
-	sudo usermod -aG docker $$USER
-	echo $(INTERACTIVE) | grep -q '1' && su -c 'docker run --rm hello-world' $$USER || echo 'Skipping Docker test'
+	sudo usermod -aG docker $(shell whoami)
+	echo $(INTERACTIVE) | grep -q '1' && su -c 'docker run --rm hello-world' $(shell whoami) || echo 'Skipping Docker test'
 	mkdir -p $(shell dirname $(DOCKER_CONFIG))
 	echo '{}' > $(DOCKER_CONFIG)
 	@echo ""
@@ -192,8 +198,8 @@ $(ZENITY):
 $(STEAM): | $(CURL) $(STEAM_TERMINAL) $(ZENITY)
 	# See: https://github.com/ValveSoftware/steam-for-linux/issues/7067#issuecomment-622390607
 	echo $(LIB_NVIDIA_GL) | grep -q ':amd64' \
-		&& sudo apt install $(shell echo $(LIB_NVIDIA_GL) | cut -d: -f1):i386 -y \
-		|| echo 'Skipping NVIDIA closed driver fix'
+		&& sudo apt install $(shell echo $(LIB_NVIDIA_GL) | cut -d: -f1):i386 python3-apt -y \
+		|| sudo apt install python3-apt -y
 	rm -rf $$HOME/.steam
 	$(CURL) -L https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb \
 		--output /tmp/steam.deb

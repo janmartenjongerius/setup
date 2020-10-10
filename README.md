@@ -78,6 +78,7 @@ The following software has been installed:
 | Google Chrome     | `make google-chrome`     |
 | JetBrains Toolbox | `make jetbrains-toolbox` |
 | jq                | `make jq`                |
+| lsb_release       | `make lsb_release`       |
 | Oh My ZSH         | `make oh-my-zsh`         |
 | Vim               | `make vim`               |
 | ZSH               | `make zsh`               |
@@ -105,7 +106,7 @@ To cherry-pick optional software, use the following phony targets:
 In order to locally test a Make target, run the following:
 
 ```
-./docker-make ubuntu:20.04 <TARGET>
+./docker-make <TARGET>
 ```
 
 Where `<TARGET>` is the target to be tested. E.g.: `steam` for Steam.
@@ -113,5 +114,12 @@ Where `<TARGET>` is the target to be tested. E.g.: `steam` for Steam.
 To test all installations, run:
 
 ```
-./docker-make ubuntu:20.04 all
+./docker-make all
+```
+
+To specify the Docker image that runs the build, provide the `IMAGE` environment
+variable. It defaults to `ubuntu:20.04`.
+
+```
+IMAGE=ubuntu:18.04 ./docker-make all
 ```
