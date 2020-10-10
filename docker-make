@@ -14,7 +14,6 @@ COMMANDS=(
 IFS=';'
 docker run \
   --rm \
-  -it \
   -v $PWD:/setup \
   -w /setup \
   ${IMAGE:=ubuntu:20.04} \
