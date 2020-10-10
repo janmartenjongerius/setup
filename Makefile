@@ -58,6 +58,11 @@ gitignore: | $(GITIGNORE)
 $(GITPROJECTS):
 	mkdir -p "$(GITPROJECTS)"
 
+$(VIM):
+	sudo apt install vim -y
+
+vim: | $(VIM)
+
 $(GIT): | $(GITCONFIG) $(GITIGNORE) $(GITPROJECTS) $(VIM)
 	sudo apt install git -y
 
@@ -118,7 +123,7 @@ $(BASH):
 
 bash: | $(BASH)
 
-$(OH_MY_ZSH): | $(ZSH) $(CURL) $(BASH)
+$(OH_MY_ZSH): | $(ZSH) $(CURL) $(BASH) $(GIT)
 	$(CURL) -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh \
 		| ZSH=$(shell dirname $(OH_MY_ZSH)) $(BASH) -s -- --keep-zshrc --unattended
 
