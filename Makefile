@@ -8,7 +8,7 @@ GITPROJECTS := $(shell echo "$$HOME/git")
 JETBRAINS_TOOLBOX := $(shell command -v jetbrains-toolbox || echo /usr/local/bin/jetbrains-toolbox)
 JETBRAINS_TOOLBOX_SETTINGS := $(shell echo "$$HOME/.local/share/JetBrains/Toolbox/.settings.json")
 
-TRANSMISSION_REMOTE := $(shell command -v transmission-remote-gtk | echo /usr/bin/transmission-remote-gtk)
+TRANSMISSION_REMOTE := $(shell command -v transmission-remote-gtk || echo /usr/bin/transmission-remote-gtk)
 
 CHROME := $(shell command -v google-chrome || echo /usr/bin/google-chrome)
 
@@ -24,6 +24,11 @@ STEAM_TERMINAL := $(shell command -v gnome-terminal \
 	|| command -v konsole \
 	|| command -v x-terminal-emulator \
 	|| echo /usr/bin/gnome-terminal)
+
+SOFTWARE_PROPERTIES_COMMON := $(shell command -v add-apt-repository || echo /usr/bin/add-apt-repository)
+LUTRIS := $(shell command -v lutris || echo /usr/games/lutris)
+
+EPIC_GAMES_STORE := $(shell echo "$$HOME/Games/epic-games-store/drive_c/Program\ Files*/Epic\ Games/Launcher/Engine/Binaries/Win*/EpicGamesLauncher.exe")
 
 SLACK := $(shell command -v slack || echo /usr/bin/slack)
 
@@ -190,7 +195,9 @@ google-chrome: | $(CHROME)
 
 optional: | \
 	discord \
+	epic-games-store \
 	gimp \
+	lutris \
 	slack \
 	steam \
 	transmission-remote
@@ -257,5 +264,22 @@ $(DISCORD): | $(CURL)
 	rm -f /tmp/discord.deb
 
 discord: | $(DISCORD)
+
+$(SOFTWARE_PROPERTIES_COMMON):
+	sudo apt install software-properties-common -y
+
+$(LUTRIS): | $(SOFTWARE_PROPERTIES_COMMON)
+	sudo add-apt-repository ppa:lutris-team/lutris -y
+	sudo apt update -y
+	sudo apt install lutris -y
+
+lutris: | $(LUTRIS)
+
+$(EPIC_GAMES_STORE): | $(LUTRIS)
+	echo $(INTERACTIVE) | grep -q '1' \
+		&& $(LUTRIS) --install 'https://lutris.net/api/installers/epic-games-store-latest?format=json' \
+		|| echo 'Lutris currently does not support unattended installations. See https://github.com/lutris/lutris/pull/3029'
+
+epic-games-store: | $(EPIC_GAMES_STORE)
 
 all: | install optional
