@@ -37,6 +37,11 @@ LSB_RELEASE := $(shell command -v lsb_release || echo /usr/bin/lsb_release)
 DOCKER := $(shell command -v docker || echo /usr/bin/docker)
 DOCKER_CONFIG := $(shell echo "$$HOME/.docker/config.json")
 
+DOCKER_COMPOSE := $(shell command -v docker-compose || echo /usr/local/bin/docker-compose)
+
+DOCKER_COMPOSE_DEVELOPMENT := $(shell echo "$(GITPROJECTS)/development")
+DOCKER_COMPOSE_DEVELOPMENT_PROFILE := $(shell echo "$$HOME/.zshrc-development")
+
 ZSH := $(shell command -v zsh || echo /usr/bin/zsh)
 ZSHRC := $(shell echo "$$HOME/.zshrc")
 OH_MY_ZSH := $(shell echo "$$HOME/.oh-my-zsh/oh-my-zsh.sh")
@@ -78,11 +83,11 @@ $(GIT): | $(GITCONFIG) $(GITIGNORE) $(GITPROJECTS) $(VIM)
 
 $(GITCONFIG_USER): | $(GIT) $(GITCONFIG)
 	@echo $(INTERACTIVE) | grep -q '1' \
-			&& read -p 'Github user name: ' username \
+			&& read -p 'Git user name: ' username \
 			|| username="$(shell whoami)"; \
 		git config --file $(GITCONFIG_USER) user.name "$$username"
 	@echo $(INTERACTIVE) | grep -q '1' \
-			&& read -p 'Github user email: ' email \
+			&& read -p 'Git user email: ' email \
 			|| email="$(shell whoami)@$(shell hostname)"; \
 		git config --file $(GITCONFIG_USER) user.email "$$email"
 
@@ -115,9 +120,9 @@ $(LSB_RELEASE):
 
 lsb_release: $(LSB_RELEASE)
 
-$(DOCKER): $(LSB_RELEASE)
+$(DOCKER): | $(LSB_RELEASE) $(CURL)
 	sudo apt install apt-transport-https ca-certificates curl gnupg-agent software-properties-common -y
-	curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+	$(CURL) -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 	sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(shell $(LSB_RELEASE) -cs) stable"
 	sudo apt update -y
 	sudo apt install docker-ce docker-ce-cli containerd.io -y
@@ -134,6 +139,31 @@ $(DOCKER_CONFIG): | $(DOCKER)
 	@echo ""
 
 docker: | $(DOCKER_CONFIG)
+
+$(DOCKER_COMPOSE): | $(DOCKER) $(CURL) $(JQ)
+	sudo $(CURL) -L $(shell $(CURL) -L https://api.github.com/repos/docker/compose/releases/latest \
+			| jq '.assets[] | select(.name == "docker-compose-Linux-x86_64").browser_download_url' \
+			| sed 's/"//g') \
+		--output $(DOCKER_COMPOSE)
+	sudo chmod +x $(DOCKER_COMPOSE)
+
+docker-compose: | $(DOCKER_COMPOSE)
+
+$(DOCKER_COMPOSE_DEVELOPMENT): | $(DOCKER_COMPOSE) $(DOCKER_CONFIG) $(GIT) $(GITPROJECTS)
+	git clone git@github.com:JeroenBoersma/docker-compose-development.git $(DOCKER_COMPOSE_DEVELOPMENT)
+	sudo service docker start
+	for volume in $(shell docker volume ls -q | grep dockerdev-); do \
+		for container in $(shell docker ps -a --filter volume=$$volume | tail -n +2); do \
+			docker rm $$container;\
+		done; \
+		docker volume rm $$volume; \
+	done
+	"$(DOCKER_COMPOSE_DEVELOPMENT)/bin/dev" setup
+
+$(DOCKER_COMPOSE_DEVELOPMENT_PROFILE): | $(DOCKER_COMPOSE_DEVELOPMENT) $(ZSHRC)
+	"$(DOCKER_COMPOSE_DEVELOPMENT)/bin/dev" profile > $(DOCKER_COMPOSE_DEVELOPMENT_PROFILE)
+
+docker-compose-development: | $(DOCKER_COMPOSE_DEVELOPMENT_PROFILE)
 
 $(ZSH):
 	sudo apt install zsh -y
@@ -195,6 +225,8 @@ google-chrome: | $(CHROME)
 
 optional: | \
 	discord \
+	docker-compose \
+	docker-compose-development \
 	epic-games-store \
 	gimp \
 	lutris \
