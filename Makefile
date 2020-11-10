@@ -56,6 +56,11 @@ DNSMASQ = /etc/dnsmasq.d
 DOCKER_COMPOSE_DEVELOPMENT := $(shell echo "$$HOME/development")
 DOCKER_COMPOSE_DEVELOPMENT_PROFILE := $(shell echo "$$HOME/.zshrc-development")
 DOCKER_COMPOSE_DEVELOPMENT_DNSMASQ := $(shell echo "$(DNSMASQ)/docker-compose-development.conf")
+DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN := $(shell echo "$(DOCKER_COMPOSE_DEVELOPMENT)/workspace/bin")
+
+COMPOSER := $(shell echo "$(DOCKER_COMPOSE_DEVELOPMENT)/bin/composer")
+COMPOSER_LOCK_DIFF := $(shell command -v composer-lock-diff || echo /usr/local/bin/composer-lock-diff)
+COMPOSER_CHANGELOGS := $(shell command -v composer-changelogs || echo /usr/local/bin/composer-changelogs)
 
 ZSH := $(shell command -v zsh || echo /usr/bin/zsh)
 ZSHRC := $(shell echo "$$HOME/.zshrc")
@@ -527,10 +532,35 @@ $(TMUXINATOR_COMPLETION_BASH): | $(TMUXINATOR) $(BASH) $(CURL)
 
 tmuxinator_completion: | $(TMUXINATOR_COMPLETION_ZSH) $(TMUXINATOR_COMPLETION_BASH)
 
+$(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN): | $(DOCKER_COMPOSE_DEVELOPMENT)
+	mkdir -p "$(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)"
+
+$(COMPOSER): | $(DOCKER_COMPOSE_DEVELOPMENT)
+composer: | $(COMPOSER)
+
+$(COMPOSER_LOCK_DIFF): | $(COMPOSER) $(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)
+	$(COMPOSER) global require davidrjonas/composer-lock-diff
+	echo 'composer global exec -- composer-lock-diff $$@;\nexit $$?;' > "$(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)/composer-lock-diff"
+	sudo ln -s "$(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)/composer-lock-diff" "$(COMPOSER_LOCK_DIFF)"
+	sudo chmod +x $(COMPOSER_LOCK_DIFF)
+
+composer-lock-diff: | $(COMPOSER_LOCK_DIFF)
+
+$(COMPOSER_CHANGELOGS): | $(COMPOSER) $(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)
+	$(COMPOSER) global require pyrech/composer-changelogs
+	echo 'composer global exec -- composer-changelogs $$@;\nexit $$?;' > "$(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)/composer-changelogs"
+	sudo ln -s "$(DOCKER_COMPOSE_DEVELOPMENT_WORKSPACE_BIN)/composer-changelogs" "$(COMPOSER_CHANGELOGS)"
+	sudo chmod +x $(COMPOSER_CHANGELOGS)
+
+composer-changelogs: | $(COMPOSER_CHANGELOGS)
+
 elgentos: | \
 	install \
 	aws \
 	brave \
+	composer \
+	composer-changelogs \
+	composer-lock-diff \
 	docker-compose-development-dnsmasq \
 	firefox \
 	gimp \

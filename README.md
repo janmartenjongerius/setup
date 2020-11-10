@@ -131,6 +131,7 @@ It installs the `install` target, and additionally the following targets:
 
 - `aws`
 - `brave`
+- `composer`
 - `dnsmasq`
 - `docker`
 - `docker-compose-development`
@@ -145,6 +146,11 @@ It installs the `install` target, and additionally the following targets:
 - `tmux`
 - `tmuxinator`
 - `tmuxinator_completion`
+
+Additionally, it installs the following commands:
+
+- [`composer-lock-diff`](https://packagist.org/packages/davidrjonas/composer-lock-diff)
+- [`composer-changelogs`](https://packagist.org/packages/pyrech/composer-changelogs)
 
 # Development
 
