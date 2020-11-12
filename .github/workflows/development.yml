@@ -13,6 +13,8 @@ jobs:
         version: ['20.04']
     runs-on: ubuntu-${{ matrix.version }}
     name: Ubuntu ${{ matrix.version }}
+    env:
+      TTY: 0
     steps:
       - uses: actions/checkout@v2
       - name: Test docker-make with VIM
